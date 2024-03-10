@@ -1,12 +1,11 @@
 const express = require('express');
-const app = express()
+const app = express();
+const cors = require('cors');
 
-const cors = require('cors')
-app.use(cors())
+app.use(cors());
+app.use(express.json());
 
-// app.use(express.static('dist'))
-
-const PORT = 3001 || process.env.PORT;
+const PORT = 3001;
 
 let notes = [
   {
@@ -24,11 +23,11 @@ let notes = [
     content: "GET and POST are the most important methods of HTTP protocol",
     important: true
   }
-]
+];
 
 app.get('/', (request, response) => {
-  response.send('<h1>Hello World!</h1>')
-})
+  response.send('<h1>Hello World!</h1>');
+});
 
 // Get all notes
 app.get('/api/notes', (request, response) => {
@@ -44,9 +43,7 @@ app.get('/api/notes/:id', (request, response) => {
   } else {
     response.status(404).end(); // Note not found
   }
-})
-
-// const generateId = () => notes.length > 0 ? Math.max(...notes.map(n => n.id)) : 0
+});
 
 // Add a new note
 app.post('/api/notes', (request, response) => {
@@ -62,6 +59,23 @@ app.post('/api/notes', (request, response) => {
   notes = notes.concat(note);
   response.json(note);
 });
+
+// Update a note by ID
+app.put('/api/notes/:id', (request, response) => {
+  const id = Number(request.params.id);
+  const body = request.body;
+  const noteIndex = notes.findIndex(note => note.id === id);
+  if (noteIndex !== -1) {
+    notes[noteIndex] = {
+      ...notes[noteIndex],
+      content: body.content || notes[noteIndex].content,
+      important: body.hasOwnProperty('important') ? Boolean(body.important) : notes[noteIndex].important
+    };
+    response.json(notes[noteIndex]);
+  } else {
+    response.status(404).json({ error: 'Note not found' });
+  }
+})
 
 // Delete a note by ID
 app.delete('/api/notes/:id', (request, response) => {
